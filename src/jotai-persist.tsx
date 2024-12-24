@@ -13,7 +13,9 @@ import {
  */
 type NamespaceContextType = {
   namespace: string[];
-  namespaceAtom: ReturnType<typeof atomWithStorage<Record<string, unknown>>>;
+  namespaceAtom: ReturnType<
+    typeof atomWithStorage<Record<string, unknown>>
+  > | null;
 };
 
 /**
@@ -22,7 +24,7 @@ type NamespaceContextType = {
  */
 export const NamespaceContext = createContext<NamespaceContextType>({
   namespace: [],
-  namespaceAtom: atomWithStorage<Record<string, unknown>>("root", {}),
+  namespaceAtom: null,
 });
 
 /**
@@ -151,6 +153,25 @@ function compareStringArrays(a: string[], b: string[]) {
   return true;
 }
 
+export function useParentStateNamespaceAtom() {
+  const context = useContext(NamespaceContext);
+  return useMemo(() => {
+    if (context.namespaceAtom) {
+      return context.namespaceAtom;
+    }
+    // Create a non-persisted atom if no storage atom is provided
+    return atomWithStorage<Record<string, unknown>>(
+      "temp-state",
+      {},
+      {
+        getItem: () => ({}),
+        setItem: () => {},
+        removeItem: () => {},
+      },
+    );
+  }, [context.namespaceAtom]);
+}
+
 export function useStateNamespaceAtom<T>(
   namespace: StateNamespace | null,
   key: string,
@@ -164,9 +185,11 @@ export function useStateNamespaceAtom<T>(
     compareStringArrays,
   );
 
+  const parentAtom = useParentStateNamespaceAtom();
+
   const stableAtom = useMemo(
-    () => createNamespacedAtom(context.namespaceAtom, path, key, defaultValue),
-    [context.namespaceAtom, path, key, defaultValue],
+    () => createNamespacedAtom(parentAtom, path, key, defaultValue),
+    [parentAtom, path, key, defaultValue],
   );
 
   return useAtom(stableAtom);
@@ -199,8 +222,8 @@ function setDeepValue(
 }
 
 export function StateDebugger() {
-  const { namespace, namespaceAtom } = useContext(NamespaceContext);
-  const fullState = useAtomValue(namespaceAtom);
+  const { namespace } = useContext(NamespaceContext);
+  const fullState = useAtomValue(useParentStateNamespaceAtom());
 
   // Get the state for the current namespace level
   const getCurrentState = (
