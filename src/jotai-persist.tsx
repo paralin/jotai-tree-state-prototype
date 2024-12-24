@@ -51,52 +51,56 @@ export function useStateNamespace(additionalPath: string[]): StateNamespace {
   const { namespace } = useContext(NamespaceContext);
   return useMemo(
     () => ({ path: [...namespace, ...additionalPath] }),
-    [namespace, additionalPath]
+    [namespace, additionalPath],
   );
 }
-
 
 export function useStateNamespaceAtom<T>(
-  namespace: StateNamespace,
+  namespace: StateNamespace | null,
   key: string,
-  defaultValue: T
+  defaultValue: T,
 ) {
-  const path = useMemo(() => [...namespace.path, key], [namespace.path, key]);
+  const context = useContext(NamespaceContext);
+  const path = useMemo(
+    () => [...(namespace?.path ?? context.namespace), key],
+    [namespace?.path, context.namespace, key],
+  );
   const derivedAtom = useMemo(
-    () => atom(
-      (get) => {
-        const value = getNestedValue(get(rootAtom), path);
-        return (value ?? defaultValue) as T;
-      },
-      (get, set, update: T | ((prev: T) => T)) => {
-        const currentValue = get(rootAtom);
-        const newValue = typeof update === "function"
-          ? (update as (prev: T) => T)(getNestedValue(currentValue, path) as T ?? defaultValue)
-          : update;
+    () =>
+      atom(
+        (get) => {
+          const value = getNestedValue(get(rootAtom), path);
+          return (value ?? defaultValue) as T;
+        },
+        (get, set, update: T | ((prev: T) => T)) => {
+          const currentValue = get(rootAtom);
+          const newValue =
+            typeof update === "function"
+              ? (update as (prev: T) => T)(
+                  (getNestedValue(currentValue, path) as T) ?? defaultValue,
+                )
+              : update;
 
-        set(rootAtom, (state) => {
-          const result = { ...state };
-          let current = result;
+          set(rootAtom, (state) => {
+            const result = { ...state };
+            let current = result;
 
-          for (let i = 0; i < path.length - 1; i++) {
-            const key = path[i];
-            current[key] = { ...((current[key] as Record<string, unknown>) || {}) };
-            current = current[key] as Record<string, unknown>;
-          }
+            for (let i = 0; i < path.length - 1; i++) {
+              const key = path[i];
+              current[key] = {
+                ...((current[key] as Record<string, unknown>) || {}),
+              };
+              current = current[key] as Record<string, unknown>;
+            }
 
-          current[path[path.length - 1]] = newValue;
-          return result;
-        });
-      }
-    ),
-    [JSON.stringify(path), defaultValue]
+            current[path[path.length - 1]] = newValue;
+            return result;
+          });
+        },
+      ),
+    [JSON.stringify(path), defaultValue],
   );
   return useAtom(derivedAtom);
-}
-
-export function usePersistedAtom<T>(key: string, defaultValue: T) {
-  const namespace = useStateNamespace([]);
-  return useStateNamespaceAtom(namespace, key, defaultValue);
 }
 
 export function StateDebugger() {

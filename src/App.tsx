@@ -1,7 +1,6 @@
 import React from "react";
 import {
   StateNamespaceProvider,
-  usePersistedAtom,
   useStateNamespace,
   useStateNamespaceAtom,
   StateDebugger,
@@ -13,7 +12,7 @@ interface CounterProps {
 }
 
 function Counter({ className }: CounterProps) {
-  const [count, setCount] = usePersistedAtom("count", 0);
+  const [count, setCount] = useStateNamespaceAtom(null, "count", 0);
 
   return (
     <button
