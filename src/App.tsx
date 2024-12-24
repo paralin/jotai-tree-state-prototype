@@ -7,6 +7,37 @@ import {
   StateDebugger,
 } from "./jotai-persist";
 
+import "./App.css";
+
+/**
+ * This demo showcases a nested state management system using Jotai with persistence.
+ *
+ * Features demonstrated:
+ * - Persistent state across page reloads using localStorage
+ * - Nested state namespaces (main, primary, secondary, nested)
+ * - Independent counters in different namespaces
+ * - State debugging display for each namespace
+ * - Custom namespace paths
+ *
+ * Each counter maintains its own state within its namespace, and all state
+ * is automatically persisted to localStorage under the "app-state" key.
+ */
+
+// Reset button to clear persisted state
+function ResetButton() {
+  return (
+    <button
+      onClick={() => {
+        localStorage.clear();
+        window.location.reload();
+      }}
+      className="reset-button"
+    >
+      Reset All State
+    </button>
+  );
+}
+
 // Create a persisted root atom for the entire app
 const persistedRootAtom = atomWithStorage<Record<string, unknown>>(
   "app-state",
@@ -20,13 +51,7 @@ function Counter() {
   return (
     <button
       onClick={() => setCount((c: number) => c + 1)}
-      style={{
-        padding: "8px 16px",
-        backgroundColor: "#3b82f6",
-        color: "white",
-        borderRadius: "4px",
-        cursor: "pointer",
-      }}
+      className="counter-button"
     >
       Count: {count}
     </button>
@@ -41,14 +66,8 @@ interface ContainerProps {
 
 function Container({ title, children }: ContainerProps) {
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: "4px",
-        padding: "16px",
-      }}
-    >
-      <h3 style={{ fontWeight: "bold", marginBottom: "16px" }}>{title}</h3>
+    <div className="container">
+      <h3 className="container-title">{title}</h3>
       {children}
     </div>
   );
@@ -64,15 +83,8 @@ interface RegionProps {
 function Region({ title, namespace, children }: RegionProps) {
   return (
     <StateNamespaceProvider namespace={namespace}>
-      <div
-        style={{
-          flex: 1,
-          border: "1px solid #e5e7eb",
-          borderRadius: "4px",
-          padding: "16px",
-        }}
-      >
-        <h5 style={{ fontWeight: "bold", marginBottom: "8px" }}>{title}</h5>
+      <div className="region">
+        <h5 className="region-title">{title}</h5>
         {children}
       </div>
     </StateNamespaceProvider>
@@ -84,18 +96,12 @@ function Content() {
   return (
     <StateNamespaceProvider namespace="main">
       <Container title="Main Content">
-        <div style={{ marginBottom: "16px" }}>
+        <div className="counter-margin">
           <Counter />
           <StateDebugger />
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "16px",
-            marginTop: "16px",
-          }}
-        >
+        <div className="region-container">
           <Region title="Primary Region" namespace="primary">
             <Counter />
             <StateDebugger />
@@ -105,17 +111,9 @@ function Content() {
             <Counter />
             <StateDebugger />
 
-            <div
-              style={{
-                borderTop: "1px solid #e5e7eb",
-                paddingTop: "16px",
-                marginTop: "16px",
-              }}
-            >
+            <div className="nested-content">
               <StateNamespaceProvider namespace="nested">
-                <h6 style={{ fontWeight: "bold", marginBottom: "8px" }}>
-                  Nested Content
-                </h6>
+                <h6 className="nested-title">Nested Content</h6>
                 <Counter />
                 <StateDebugger />
               </StateNamespaceProvider>
@@ -135,13 +133,7 @@ function NamespacedCounter() {
   return (
     <button
       onClick={() => setCount((c: number) => c + 1)}
-      style={{
-        padding: "8px 16px",
-        backgroundColor: "#3b82f6",
-        color: "white",
-        borderRadius: "4px",
-        cursor: "pointer",
-      }}
+      className="counter-button"
     >
       Namespaced Count: {count}
     </button>
@@ -151,14 +143,10 @@ function NamespacedCounter() {
 function App() {
   return (
     <StateNamespaceProvider rootAtom={persistedRootAtom}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "32px",
-          padding: "16px",
-        }}
-      >
+      <div className="app-wrapper">
+        <ResetButton />
+      </div>
+      <div className="main-content">
         <Container title="Root">
           <Counter />
           <StateDebugger />
