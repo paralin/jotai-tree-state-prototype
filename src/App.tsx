@@ -9,20 +9,6 @@ import {
 
 import "./App.css";
 
-/**
- * This demo showcases a nested state management system using Jotai with persistence.
- *
- * Features demonstrated:
- * - Persistent state across page reloads using localStorage
- * - Nested state namespaces (main, primary, secondary, nested)
- * - Independent counters in different namespaces
- * - State debugging display for each namespace
- * - Custom namespace paths
- *
- * Each counter maintains its own state within its namespace, and all state
- * is automatically persisted to localStorage under the "app-state" key.
- */
-
 // Reset button to clear persisted state
 function ResetButton() {
   return (
@@ -144,7 +130,28 @@ function App() {
   return (
     <StateNamespaceProvider rootAtom={persistedRootAtom}>
       <div className="app-wrapper">
-        <ResetButton />
+        <div className="demo-description">
+          <h2>Jotai Persistence Demo</h2>
+          <p>
+            This demo showcases a nested state management system using Jotai
+            with persistence.
+          </p>
+          <ul>
+            <li>Persistent state across page reloads using localStorage</li>
+            <li>Nested state namespaces (main, primary, secondary, nested)</li>
+            <li>Independent counters in different namespaces</li>
+            <li>State debugging display for each namespace</li>
+            <li>Custom namespace paths</li>
+          </ul>
+          <p>
+            Each counter maintains its own state within its namespace, and all
+            state is automatically persisted to localStorage under the
+            "app-state" key.
+          </p>
+        </div>
+        <div className="reset-button-container">
+          <ResetButton />
+        </div>
       </div>
       <div className="main-content">
         <Container title="Root">
