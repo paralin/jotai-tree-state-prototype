@@ -2,6 +2,8 @@ import React from "react";
 import {
   StateNamespaceProvider,
   usePersistedAtom,
+  useStateNamespace,
+  useStateNamespaceAtom,
   StateDebugger,
 } from "./jotai-persist";
 
@@ -126,6 +128,27 @@ function Content() {
   );
 }
 
+// Example of using the new namespace hooks
+function NamespacedCounter() {
+  const namespace = useStateNamespace(["custom", "path"]);
+  const [count, setCount] = useStateNamespaceAtom(namespace, "count", 0);
+
+  return (
+    <button
+      onClick={() => setCount((c) => c + 1)}
+      style={{
+        padding: "8px 16px",
+        backgroundColor: "#3b82f6",
+        color: "white",
+        borderRadius: "4px",
+        cursor: "pointer",
+      }}
+    >
+      Namespaced Count: {count}
+    </button>
+  );
+}
+
 function App() {
   return (
     <StateNamespaceProvider>
@@ -142,6 +165,10 @@ function App() {
           <StateDebugger />
         </Container>
         <Content />
+        <Container title="Custom Namespace Example">
+          <NamespacedCounter />
+          <StateDebugger />
+        </Container>
       </div>
     </StateNamespaceProvider>
   );
