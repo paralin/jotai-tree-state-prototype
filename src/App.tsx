@@ -8,7 +8,10 @@ import {
 } from "./jotai-persist";
 
 // Create a persisted root atom for the entire app
-const persistedRootAtom = atomWithStorage<Record<string, unknown>>("app-state", {});
+const persistedRootAtom = atomWithStorage<Record<string, unknown>>(
+  "app-state",
+  {},
+);
 
 // Counter component with persisted state
 interface CounterProps {
@@ -20,7 +23,7 @@ function Counter({ className }: CounterProps) {
 
   return (
     <button
-      onClick={() => setCount((c) => c + 1)}
+      onClick={() => setCount((c: number) => c + 1)}
       style={{
         padding: "8px 16px",
         backgroundColor: "#3b82f6",
@@ -138,7 +141,7 @@ function NamespacedCounter() {
 
   return (
     <button
-      onClick={() => setCount((c) => c + 1)}
+      onClick={() => setCount((c: number) => c + 1)}
       style={{
         padding: "8px 16px",
         backgroundColor: "#3b82f6",
@@ -170,7 +173,6 @@ function App() {
         <Content />
         <Container title="Custom Namespace Example">
           <NamespacedCounter />
-          <StateDebugger />
         </Container>
       </div>
     </StateNamespaceProvider>
