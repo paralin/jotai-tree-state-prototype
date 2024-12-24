@@ -157,6 +157,8 @@ export function useStateNamespaceAtom<T>(
   defaultValue: T,
 ): [T, (update: T | ((prev: T) => T)) => void] {
   const context = useContext(NamespaceContext);
+
+  // this useMemoEqual is necessary to avoid an infinite rerender loop.
   const path = useMemoEqual(
     namespace?.path || context.namespace,
     compareStringArrays,
