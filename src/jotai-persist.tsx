@@ -40,13 +40,18 @@ export function StateNamespaceProvider({
     ? [...parentContext.namespace, namespace]
     : parentContext.namespace;
 
+  // Memoize the check for root namespace to avoid unnecessary recalculations
+  const isRootNamespace = useMemo(
+    () => !parentContext.namespace.length,
+    [parentContext.namespace.length]
+  );
+
   const namespaceAtom = useMemo(() => {
-    if (!parentContext.namespace.length && rootAtom) {
+    if (isRootNamespace && rootAtom) {
       return rootAtom;
     }
-
     return parentContext.namespaceAtom;
-  }, [namespace, parentContext.namespaceAtom, rootAtom, ...newNamespace]);
+  }, [isRootNamespace, rootAtom, parentContext.namespaceAtom]);
 
   return (
     <NamespaceContext.Provider
