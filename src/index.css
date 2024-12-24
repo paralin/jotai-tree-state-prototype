@@ -1,3 +1,11 @@
+html, body {
+  width: 100%;
+}
+
+#root {
+  flex-grow: 1;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
