@@ -1,10 +1,14 @@
 import React from "react";
+import { atomWithStorage } from "jotai/utils";
 import {
   StateNamespaceProvider,
   useStateNamespace,
   useStateNamespaceAtom,
   StateDebugger,
 } from "./jotai-persist";
+
+// Create a persisted root atom for the entire app
+const persistedRootAtom = atomWithStorage<Record<string, unknown>>("app-state", {});
 
 // Counter component with persisted state
 interface CounterProps {
@@ -150,7 +154,7 @@ function NamespacedCounter() {
 
 function App() {
   return (
-    <StateNamespaceProvider>
+    <StateNamespaceProvider rootAtom={persistedRootAtom}>
       <div
         style={{
           display: "flex",
