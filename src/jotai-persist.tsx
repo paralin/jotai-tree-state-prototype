@@ -1,12 +1,7 @@
 import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { useMemoEqual } from "./memo-equal.js";
 
 /**
  * Context type for managing namespaced state
@@ -82,7 +77,12 @@ export type StateNamespace = { path: string[] };
  */
 export function useStateNamespace(additionalPath: string[]): StateNamespace {
   const { namespace } = useContext(NamespaceContext);
-  return { path: [...namespace, ...additionalPath] };
+  const memoNamespace = useMemoEqual(namespace, compareStringArrays);
+  const memoAdditionalPath = useMemoEqual(additionalPath, compareStringArrays);
+  return useMemo(
+    () => ({ path: [...memoNamespace, ...memoAdditionalPath] }),
+    [memoNamespace, memoAdditionalPath],
+  );
 }
 
 function createNamespacedAtom<T>(
@@ -113,35 +113,6 @@ function createNamespacedAtom<T>(
   );
 
   return baseAtom;
-}
-
-/**
- * Memoizes a value using custom equality comparison.
- * Returns the memoized value if the new value is considered equal.
- *
- * @template T - The value type
- * @param value - The value to potentially memoize
- * @param checkEqual - Optional function to compare values for equality
- * @returns The memoized value if equal, otherwise the new value
- */
-function useMemoEqual<T>(
-  value: T,
-  checkEqual?: (v1: NonNullable<T>, v2: NonNullable<T>) => boolean,
-): T {
-  const ref = useRef<T>(value);
-
-  const isEqual =
-    value === ref.current ||
-    (value != null &&
-      ref.current != null &&
-      checkEqual &&
-      checkEqual(value as NonNullable<T>, ref.current as NonNullable<T>));
-
-  if (!isEqual) {
-    ref.current = value;
-  }
-
-  return ref.current;
 }
 
 // compares two string arrays for equality.
@@ -219,6 +190,56 @@ function setDeepValue(
       value,
     ),
   };
+}
+
+function createNamespacedReducerAtom<State, Action>(
+  storageAtom: ReturnType<typeof atomWithStorage<Record<string, unknown>>>,
+  path: string[],
+  key: string,
+  reducer: (state: State, action: Action) => State,
+  initialState: State,
+) {
+  const baseAtom = atom(
+    (get) => {
+      let state = get(storageAtom);
+      for (const segment of path) {
+        state = (state[segment] as Record<string, unknown>) || {};
+      }
+      return (state[key] ?? initialState) as State;
+    },
+    (get, set, action: Action) => {
+      const currentState = get(baseAtom);
+      const newState = reducer(currentState, action);
+
+      set(storageAtom, (prevState) =>
+        setDeepValue(prevState, path, key, newState),
+      );
+    },
+  );
+
+  return baseAtom;
+}
+
+export function useStateNamespaceReducerAtom<State, Action>(
+  namespace: StateNamespace | null,
+  key: string,
+  reducer: (state: State, action: Action) => State,
+  initialState: State,
+): [State, (action: Action) => void] {
+  const context = useContext(NamespaceContext);
+  const path = useMemoEqual(
+    namespace?.path || context.namespace,
+    compareStringArrays,
+  );
+  const parentAtom = useParentStateNamespaceAtom();
+
+  const stableAtom = useMemo(
+    () =>
+      createNamespacedReducerAtom(parentAtom, path, key, reducer, initialState),
+    [parentAtom, path, key, reducer, initialState],
+  );
+
+  return useAtom(stableAtom);
 }
 
 export function StateDebugger() {

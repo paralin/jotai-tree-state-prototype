@@ -5,6 +5,7 @@ import {
   useStateNamespace,
   useStateNamespaceAtom,
   StateDebugger,
+  useStateNamespaceReducerAtom,
 } from "./jotai-persist";
 
 import "./App.css";
@@ -126,6 +127,87 @@ function NamespacedCounter() {
   );
 }
 
+// Todo types and reducer
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
+type TodoAction =
+  | { type: "ADD"; text: string }
+  | { type: "TOGGLE"; id: number };
+
+const todoReducer = (state: Todo[], action: TodoAction): Todo[] => {
+  switch (action.type) {
+    case "ADD":
+      return [
+        ...state,
+        {
+          id: state.length ? Math.max(...state.map((t) => t.id)) + 1 : 1,
+          text: action.text,
+          completed: false,
+        },
+      ];
+    case "TOGGLE":
+      return state.map((todo) =>
+        todo.id === action.id ? { ...todo, completed: !todo.completed } : todo,
+      );
+    default:
+      return state;
+  }
+};
+
+// Initial state for the todo list
+const initialTodos: Todo[] = [];
+
+function TodoList() {
+  const [todos, dispatch] = useStateNamespaceReducerAtom<Todo[], TodoAction>(
+    null,
+    "todos",
+    todoReducer,
+    initialTodos,
+  );
+  const [newTodo, setNewTodo] = React.useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTodo.trim()) {
+      dispatch({ type: "ADD", text: newTodo.trim() });
+      setNewTodo("");
+    }
+  };
+
+  return (
+    <div className="todo-container">
+      <form onSubmit={handleSubmit} className="todo-form">
+        <input
+          type="text"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          placeholder="Add a new todo"
+          className="todo-input"
+        />
+        <button type="submit" className="todo-add-button">
+          Add Todo
+        </button>
+      </form>
+      <ul className="todo-list">
+        {todos.map((todo) => (
+          <li
+            key={todo.id}
+            onClick={() => dispatch({ type: "TOGGLE", id: todo.id })}
+            className={`todo-item ${todo.completed ? "completed" : ""}`}
+          >
+            {todo.text}
+          </li>
+        ))}
+      </ul>
+      <StateDebugger />
+    </div>
+  );
+}
+
 function App() {
   return (
     <StateNamespaceProvider rootAtom={persistedRootAtom}>
@@ -161,6 +243,9 @@ function App() {
         <Content />
         <Container title="Custom Namespace Example">
           <NamespacedCounter />
+        </Container>
+        <Container title="Todo List (Reducer Example)">
+          <TodoList />
         </Container>
       </div>
     </StateNamespaceProvider>
