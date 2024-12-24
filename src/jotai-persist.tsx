@@ -4,7 +4,6 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 /**
  * Context type for managing namespaced state
- * @typedef {Object} NamespaceContextType
  */
 type NamespaceContextType = {
   namespace: string[];
