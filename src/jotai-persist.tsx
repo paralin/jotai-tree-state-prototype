@@ -75,7 +75,11 @@ export function useStateNamespaceAtom<T>(
               typeof update === "function" ? update(get(derivedAtom)) : update;
 
             // Helper function to set deeply nested value
-            function setDeepValue(obj: Record<string, unknown>, keys: string[], value: unknown): Record<string, unknown> {
+            function setDeepValue(
+              obj: Record<string, unknown>,
+              keys: string[],
+              value: unknown,
+            ): Record<string, unknown> {
               if (keys.length === 0) {
                 return { ...obj, [key]: value };
               }
@@ -85,7 +89,7 @@ export function useStateNamespaceAtom<T>(
                 [first]: setDeepValue(
                   (obj[first] as Record<string, unknown>) || {},
                   rest,
-                  value
+                  value,
                 ),
               };
             }
@@ -105,7 +109,10 @@ export function StateDebugger() {
   const fullState = useAtomValue(namespaceAtom);
 
   // Get the state for the current namespace level
-  const getCurrentState = (state: Record<string, unknown>, path: string[]): Record<string, unknown> => {
+  const getCurrentState = (
+    state: Record<string, unknown>,
+    path: string[],
+  ): Record<string, unknown> => {
     let current = state;
     for (const segment of path) {
       current = (current[segment] as Record<string, unknown>) || {};
