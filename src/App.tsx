@@ -14,11 +14,7 @@ const persistedRootAtom = atomWithStorage<Record<string, unknown>>(
 );
 
 // Counter component with persisted state
-interface CounterProps {
-  className?: string;
-}
-
-function Counter({ className }: CounterProps) {
+function Counter() {
   const [count, setCount] = useStateNamespaceAtom(null, "count", 0);
 
   return (
@@ -30,7 +26,6 @@ function Counter({ className }: CounterProps) {
         color: "white",
         borderRadius: "4px",
         cursor: "pointer",
-        ...(className && typeof className === "object" ? className : {}),
       }}
     >
       Count: {count}
@@ -42,17 +37,15 @@ function Counter({ className }: CounterProps) {
 interface ContainerProps {
   title: string;
   children: React.ReactNode;
-  className?: string;
 }
 
-function Container({ title, children, className }: ContainerProps) {
+function Container({ title, children }: ContainerProps) {
   return (
     <div
       style={{
         border: "1px solid #e5e7eb",
         borderRadius: "4px",
         padding: "16px",
-        ...(className && typeof className === "object" ? className : {}),
       }}
     >
       <h3 style={{ fontWeight: "bold", marginBottom: "16px" }}>{title}</h3>
@@ -90,7 +83,7 @@ function Region({ title, namespace, children }: RegionProps) {
 function Content() {
   return (
     <StateNamespaceProvider namespace="main">
-      <Container title="Main Content" className="ml-4 mt-4">
+      <Container title="Main Content">
         <div style={{ marginBottom: "16px" }}>
           <Counter />
           <StateDebugger />
@@ -167,7 +160,7 @@ function App() {
         }}
       >
         <Container title="Root">
-          <Counter className="mb-4" />
+          <Counter />
           <StateDebugger />
         </Container>
         <Content />
