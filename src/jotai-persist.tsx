@@ -2,16 +2,31 @@ import { atom, useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
+/**
+ * Context type for managing namespaced state
+ * @typedef {Object} NamespaceContextType
+ */
 type NamespaceContextType = {
   namespace: string[];
   namespaceAtom: ReturnType<typeof atomWithStorage<Record<string, unknown>>>;
 };
 
+/**
+ * Context for managing state namespaces
+ * Provides access to the current namespace path and storage atom
+ */
 export const NamespaceContext = createContext<NamespaceContextType>({
   namespace: [],
   namespaceAtom: atomWithStorage<Record<string, unknown>>("root", {}),
 });
 
+/**
+ * Provider component for managing namespaced state
+ * @param {Object} props - Component props
+ * @param {ReactNode} props.children - Child components
+ * @param {string} [props.namespace] - Optional namespace identifier
+ * @param {ReturnType<typeof atomWithStorage<Record<string, unknown>>>} [props.rootAtom] - Optional root storage atom
+ */
 export function StateNamespaceProvider({
   children,
   namespace,
@@ -43,18 +58,34 @@ export function StateNamespaceProvider({
   );
 }
 
+/**
+ * Type representing a state namespace path
+ */
 export type StateNamespace = { path: string[] };
 
+/**
+ * Hook to create a namespace path by combining current context with additional path segments
+ * @param {string[]} additionalPath - Additional path segments to append
+ * @returns {StateNamespace} Combined namespace path
+ */
 export function useStateNamespace(additionalPath: string[]): StateNamespace {
   const { namespace } = useContext(NamespaceContext);
   return { path: [...namespace, ...additionalPath] };
 }
 
+/**
+ * Hook to access and modify state within a namespace
+ * @template T - Type of the stored value
+ * @param {StateNamespace | null} namespace - Optional custom namespace
+ * @param {string} key - State key within the namespace
+ * @param {T} defaultValue - Default value if state is not initialized
+ * @returns {[T, (update: T | ((prev: T) => T)) => void]} Tuple of state value and setter
+ */
 export function useStateNamespaceAtom<T>(
   namespace: StateNamespace | null,
   key: string,
   defaultValue: T,
-) {
+): [T, (update: T | ((prev: T) => T)) => void] {
   const context = useContext(NamespaceContext);
   const path = namespace?.path || context.namespace;
 
@@ -104,6 +135,10 @@ export function useStateNamespaceAtom<T>(
   return useAtom(derivedAtom);
 }
 
+/**
+ * Component for debugging namespace state
+ * Displays the current state for the active namespace
+ */
 export function StateDebugger() {
   const { namespace, namespaceAtom } = useContext(NamespaceContext);
   const fullState = useAtomValue(namespaceAtom);
